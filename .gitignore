@@ -8,6 +8,7 @@ __pycache__/
 .coverage
 coverage.xml
 .DS_Store
+.claude
 
 # ==== Environments ====
 .venv/
@@ -19,13 +20,8 @@ env/
 .vscode/
 .idea/
 
-# ==== Project outputs (keep code only) ====
+# ==== Project outputs ====
 data/
-vis_out/
-exp_out/
-runs/
-wandb/
-logs/
 
 # checkpoints / weights
 *.pt
