@@ -80,6 +80,12 @@ def main() -> None:
     p.add_argument("--grid-nrow", type=int, default=8)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--k-row-index", type=int, default=-1, help="Static PNG row index for K slice; -1 = middle")
+    p.add_argument(
+        "--only-k-row-slice-png",
+        action="store_true",
+        help="Only write K_row_slice_*.png (skip mean residual, recon grid, HTML, diagonal). "
+        "Still runs covariance estimation over the split.",
+    )
     args = p.parse_args()
 
     device = torch.device(args.device)
@@ -123,16 +129,18 @@ def main() -> None:
     )
 
     print(f"samples={n_img}  ||r_bar||_2={mean_residual_l2_norm(mean_r):.6e}")
-    save_mean_residual_map(mean_r, out_dir / f"mean_residual_{stem}.png")
+    only_row = bool(args.only_k_row_slice_png)
 
-    nrow = int(args.grid_nrow)
-    n_show = int(args.grid_n)
-    ox, rx = stack_recon_grid_tensors(model, ds, device, n_show=n_show, seed=int(args.seed))
-    save_recon_grid_png(ox, rx, out_dir / f"recon_grid_{stem}.png", nrow=nrow)
+    if not only_row:
+        save_mean_residual_map(mean_r, out_dir / f"mean_residual_{stem}.png")
+
+        nrow = int(args.grid_nrow)
+        n_show = int(args.grid_n)
+        ox, rx = stack_recon_grid_tensors(model, ds, device, n_show=n_show, seed=int(args.seed))
+        save_recon_grid_png(ox, rx, out_dir / f"recon_grid_{stem}.png", nrow=nrow)
 
     k_row = None if args.k_row_index < 0 else int(args.k_row_index)
-
-    mr_np = mean_r.detach().cpu().numpy()
+    mr_np = None if only_row else mean_r.detach().cpu().numpy()
 
     if isinstance(K_or_list, list):
         for ch, Kc in enumerate(K_or_list):
@@ -147,16 +155,18 @@ def main() -> None:
                 out_dir / f"K_row_slice_{tag}_{stem}.png",
                 row_index=k_row,
             )
-            write_K_row_slice_interactive_html(
-                out_dir / f"K_row_slice_{tag}_{stem}.html",
-                Kc,
-                1,
-                meta["img_h"],
-                meta["img_w"],
-                picker_bg=mr_np[ch],
-                title=f"K row slice {tag} ({stem})",
-            )
-            save_K_diagonal_plot(Kc, out_dir / f"K_diagonal_{tag}_{stem}.png", title_suffix=f"({tag})")
+            if not only_row:
+                assert mr_np is not None
+                write_K_row_slice_interactive_html(
+                    out_dir / f"K_row_slice_{tag}_{stem}.html",
+                    Kc,
+                    1,
+                    meta["img_h"],
+                    meta["img_w"],
+                    picker_bg=mr_np[ch],
+                    title=f"K row slice {tag} ({stem})",
+                )
+                save_K_diagonal_plot(Kc, out_dir / f"K_diagonal_{tag}_{stem}.png", title_suffix=f"({tag})")
     else:
         K = K_or_list
         mf = isotropic_structure_metrics(K)
@@ -169,16 +179,18 @@ def main() -> None:
             out_dir / f"K_row_slice_{stem}.png",
             row_index=k_row,
         )
-        write_K_row_slice_interactive_html(
-            out_dir / f"K_row_slice_{stem}.html",
-            K,
-            meta["in_channels"],
-            meta["img_h"],
-            meta["img_w"],
-            picker_bg=mr_np,
-            title=f"K row slice ({stem})",
-        )
-        save_K_diagonal_plot(K, out_dir / f"K_diagonal_{stem}.png")
+        if not only_row:
+            assert mr_np is not None
+            write_K_row_slice_interactive_html(
+                out_dir / f"K_row_slice_{stem}.html",
+                K,
+                meta["in_channels"],
+                meta["img_h"],
+                meta["img_w"],
+                picker_bg=mr_np,
+                title=f"K row slice ({stem})",
+            )
+            save_K_diagonal_plot(K, out_dir / f"K_diagonal_{stem}.png")
 
     print(out_dir.resolve())
 
