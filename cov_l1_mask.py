@@ -99,3 +99,36 @@ def row_sparse_indices_from_mask(mask: torch.Tensor) -> torch.Tensor:
         if n > 0:
             idx[i, :n] = cols
     return idx
+
+
+if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+
+    img_h = 32
+    img_w = 32
+    d_l1 = 4
+
+    hw = img_h * img_w
+    mask = l1_mask_hw_grid(
+        hw=hw,
+        img_w=img_w,
+        d_l1=d_l1,
+        device=torch.device("cpu"),
+        dtype=torch.float32,
+    )
+    nnz = int((mask != 0).sum().item())
+    dens = float(nnz) / float(hw * hw)
+    print(f"mask shape={tuple(mask.shape)}  d_l1={d_l1}  nnz={nnz}  density={dens:.6f}")
+
+    fig, ax = plt.subplots(figsize=(6, 6), dpi=160)
+    im = ax.imshow(mask.numpy(), cmap="viridis", interpolation="nearest", vmin=0.0, vmax=1.0)
+    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    ax.set_title(f"L1 mask on {img_h}x{img_w} grid (d={d_l1})")
+    ax.set_xlabel("j")
+    ax.set_ylabel("i")
+    fig.tight_layout()
+
+    out_path = f"cov_l1_mask_{img_h}x{img_w}_d{d_l1}.png"
+    fig.savefig(out_path)
+    print(f"saved: {out_path}")
+    plt.show()
