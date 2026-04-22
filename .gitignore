@@ -33,15 +33,6 @@ logs/
 *.ckpt
 *.onnx
 
-# generated images / figures
-*.png
-*.jpg
-*.jpeg
-*.gif
-*.webp
-*.pdf
-*.html
-
 # misc
 *.log
 *.tmp
