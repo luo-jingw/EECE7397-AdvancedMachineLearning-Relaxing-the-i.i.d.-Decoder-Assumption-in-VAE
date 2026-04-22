@@ -1,0 +1,46 @@
+# ==== Python / OS ====
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+.DS_Store
+
+# ==== Environments ====
+.venv/
+venv/
+env/
+.env
+
+# ==== Editors ====
+.vscode/
+.idea/
+
+# ==== Project outputs (keep code only) ====
+data/
+vis_out/
+exp_out/
+runs/
+wandb/
+logs/
+
+# checkpoints / weights
+*.pt
+*.pth
+*.ckpt
+*.onnx
+
+# generated images / figures
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.pdf
+
+# misc
+*.log
+*.tmp
